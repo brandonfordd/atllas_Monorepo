@@ -85,8 +85,11 @@ export default function Login({ navigation }: LoginProps) {
       //Then store the token into the function AsyncStorage to be used on the scope
       if (loginResponse.ok) {
 
+        console.log('Login Token', responseData.data)
+
+        const userToken =  responseData.data ;
         // Save the token to AsyncStorage
-        await AsyncStorage.setItem('userToken', responseData.data.token);
+        await AsyncStorage.setItem('userToken', JSON.stringify(userToken));
 
         // Save the token to AsyncStorage
         const userData = { responseData };
@@ -99,13 +102,11 @@ export default function Login({ navigation }: LoginProps) {
 
         // Set user data and navigate to the home screen, passing user data
         setUserData(responseData.data);
-        navigation.navigate('Home', {
-          userData: responseData,
-        });
+        navigation.navigate('Home');
 
       } else {
         // Handle unsuccessful login
-        Alert.alert('Error', responseData.message);
+        Alert.alert('login error Error', responseData.message);
       }
     } catch (error) {
       console.error('Login Error:', error);

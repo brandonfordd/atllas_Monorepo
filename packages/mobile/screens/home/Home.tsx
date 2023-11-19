@@ -4,37 +4,42 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, StyleSheet, View, Alert, Text, TouchableHighlight, TextStyle  } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
-//Params list that accept the login data and user data
-type HomeProps = {
-  route: {
-    params?: {
-      userData: any;
-      loginData?: any;
-    };
-  };
-  navigation: any; // Adjust this type based on the actual type of your navigation object
-};
+import { useFocusEffect } from '@react-navigation/native';
 
 // Define the type for the 'Home' screen in the navigation stack
 type Home = NativeStackScreenProps<StackScreens, 'Home'>;
 
 // Define the Home component, which represents the main screen of the app
-export default function Home({ route, navigation }: HomeProps) {
+export default function Home({ navigation }: Home) {
     // Functions to handle the button presses
     const handleLoginPress = useCallback(() => navigation.navigate("Login"), [navigation?.navigate]);
     const handleRegisterPress = useCallback(() => navigation.navigate('Register'), [navigation?.navigate]);
     const handleWebviewPress = useCallback(() => navigation.navigate('App'), [navigation?.navigate]);
-    const [gameResult, setGameResult] = useState<string | null>(null);
-   
-    const [userData, setUserData] = useState(route.params?.userData);
-    const [token, setToken] = useState<string | null>(null);
-  
-    useEffect(() => {
-      setUserData(route.params?.userData);
-    }, [route.params?.userData]);
 
+    const [gameResult, setGameResult] = useState<string | null>(null);
+    const [userData, setUserData] = useState<any>(null);
+    const [token, setToken] = useState<string | null>(null);
+    const { displayName } = userData?.user || {};
+
+    // Update displayName when userData changes
+    useFocusEffect(
+      useCallback(() => {
+        const fetchData = async () => {
+          try {
+              const userToken = await retrieveUserToken();
+              setToken(userToken);
+
+              await fetchUserData(userToken);
+          } catch (error) {
+              console.error('Fetch Data Error:', error);
+          }
+      };
+  
+      // Fetch data on component mount
+      fetchData();
+      }, [])
+    );
+  
     // Function to retrieve the user token from AsyncStorage
     const retrieveUserToken = async (): Promise<string | null> => {
       try {
@@ -45,61 +50,39 @@ export default function Home({ route, navigation }: HomeProps) {
         return null;
       }
     };
-  
     // Function to fetch user data using the provided token
     const fetchUserData = async (token: string | null): Promise<void> => {
       try {
-        if (!token) {
-          console.error('Invalid token');
-          return;
-        }
-  
-        // Set the .env. variable to use in local or development,
-        // note, change to your own URL in .env.development
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  
-        // Make Auth request
-        const response = await fetch(`${apiUrl}auth`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-  
-        if (response.ok) {
-          const data = await response.json();
-          setUserData(data.data);
-          console.log('Set user data:', data.data);
-        } else {
-          Alert.alert('Error', 'Failed to fetch user data');
-        }
-      } catch (error) {
-        console.error('Fetch User Data Error:', error);
-        Alert.alert('Error', 'An error occurred while fetching user data');
-      }
-    };
-  
-    // useEffect to fetch user token and user data on component mount
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          // Retrieve the user token
-          const userToken = await retrieveUserToken();
-          setToken(userToken);
-  
-          // Fetch user data using the retrieved token
-          await fetchUserData(userToken);
-        } catch (error) {
-          console.error('Fetch Data Error:', error);
-        }
-      };
-  
-      // Fetch data on component mount
-      fetchData();
-    }, []);
+          if (!token) {
+              console.error('Invalid token');
+              return;
+          }
 
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+          const response = await fetch(`${apiUrl}auth`, {
+              method: 'GET',
+              headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+          });
+
+          if (response.ok) {
+              const data = await response.json();
+              setUserData(data.data);
+              console.log('Set user data:', data.data);
+          } else {
+              Alert.alert('Error', 'Failed to fetch user data');
+          }
+      } catch (error) {
+          console.error('Fetch User Data Error:', error);
+          Alert.alert('Error', 'An error occurred while fetching user data');
+      } 
+    };
+
+    
   // Function to handle the logout button press
   const handleLogout = async () => {
     try {
@@ -124,8 +107,9 @@ export default function Home({ route, navigation }: HomeProps) {
         // Reset the token state
         setToken(null);
   
-        // Reset the user data state and login data
-        navigation.setParams({ userData: undefined });
+        // Clear the stored token and user data in AsyncStorage
+        await AsyncStorage.removeItem('userToken');
+        await AsyncStorage.removeItem('userData');
   
         // Reset the game result state to null
         setGameResult(null);
@@ -171,7 +155,7 @@ export default function Home({ route, navigation }: HomeProps) {
     <View style={styles.container}>
       {userData ? (
         <View style={{ flex: 1, justifyContent: 'flex-end', width: '70%' }}>
-          <Text style={styles.welcomeText}>Welcome, {userData.user.username}!</Text>
+          <Text style={styles.welcomeText}>Welcome, {displayName}!</Text>
           <Text style={styles.welcomeText}>Are You Ready To Play?</Text>
           {/* Rock, Paper, Scissors Game Section */}
           <View>
@@ -200,9 +184,7 @@ export default function Home({ route, navigation }: HomeProps) {
   <TouchableHighlight
     style={styles.buttonProfile}
     onPress={() =>
-      navigation.navigate('Profile', {
-        userData: route.params?.userData,
-      })
+      navigation.navigate('Profile')
     }
   >
     <Text style={styles.buttonText}>Profile</Text>
@@ -283,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     marginTop: 20,
     marginBottom: 10,
-    textAlign: 'center', // Add textAlign: 'center' to center the text
+    textAlign: 'center',
   },
   homeText: {
     fontSize: 30,
@@ -299,9 +281,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e4264',
   },
   buttonContainer: {
-    flexDirection: 'row', // Align items horizontally
-    justifyContent: 'space-between', // Add space between the buttons
-    marginBottom: 20, // Adjust the spacing as needed
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+    marginBottom: 20,
     marginTop: 'auto',
   },
   buttonWebViewLN: {

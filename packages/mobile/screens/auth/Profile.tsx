@@ -4,20 +4,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StackScreens } from '../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// //Params list that accept the login data and user data
-// type HomeProps = {
-//     route: {
-//       params?: {
-//         userData: any;
-//       };
-//     };
-//     navigation: any; // Adjust this type based on the actual type of your navigation object
-//   };
-
-
 type Profile = NativeStackScreenProps<StackScreens, 'Profile'>;
 
-export default function UserProfile({ route, navigation }: Profile) {
+export default function UserProfile({}: Profile) {
     const [userData, setUserData] = useState<any>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +34,7 @@ export default function UserProfile({ route, navigation }: Profile) {
                 }),
             });
 
-            console.log('Request updatedisplayname:', {
+            console.log('Request update displayname:', {
                 apiUrl,
                 method: 'POST',
                 headers: {
@@ -76,7 +65,11 @@ export default function UserProfile({ route, navigation }: Profile) {
                     },
                 };
 
+                //Store the new userData in the asyncStorage for the home page
                 await AsyncStorage.setItem('userData', JSON.stringify(updatedUserData));
+
+                // Close the modal after changing the display name
+                handleCloseEditModal();
 
                 console.log('Display name updated successfully');
             } else {
@@ -149,7 +142,7 @@ export default function UserProfile({ route, navigation }: Profile) {
 
     // Log the userData when it's available or changed
     useEffect(() => {
-        console.log('userdata on user profile', userData);
+        console.log('user data on user profile', userData);
     }, [userData]);
 
     // Update displayName when userData changes

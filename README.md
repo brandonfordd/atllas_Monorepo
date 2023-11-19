@@ -22,6 +22,7 @@ This project was to create a working native react application that works with th
 - Login a user.
 - Authorize a user.
 - Logout a user.
+- User Profile where user can change display name.
 - Working webview that passes user information and authorization.
 - Working simple game of rock, paper, and scissor shoot.
 - Builds with no warnings or errors on the first try.

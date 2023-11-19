@@ -11,10 +11,7 @@ import Profile from './screens/auth/Profile';
 
 // Defining the type for the stack screen props
 export type StackScreens = {
-  Home: {
-     // 'loginData' is an optional property of any type to match data coming from login
-    userData: any;
-  };
+  Home: undefined
   Login: undefined
   Register:  undefined;
   App: undefined;
