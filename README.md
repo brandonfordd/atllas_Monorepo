@@ -10,6 +10,7 @@ This monorepo consists of three packages: back-end, front-end, and mobile. The p
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
+- [Issues](#issues)
 
 ## Introduction
 
@@ -79,9 +80,12 @@ npm i
 ```
 
 # Usage
-After you have run `npm i` in the root directoy and mobile directory and seeded the database you can run there commands to start the servers
+After you have run `npm i` in the root directory and mobile directory and seeded the database you can run there commands to start the servers
 
 1. `npm run start` in the root directory
 2. `npx expo start` in `packages/mobile`
 
 If you using your own mobile device and not a simulated please download the expo app on your appropriate device then scan the QR code that is given once starting the expo server.
+
+## Issues
+* Once Logged in webview need 3-5 seconds for the cookie to register, and once Logged out cookie needs 3-5 second to disappear so Logged in start might show if you click on it too fast, then the page needs a reload for data to show or disappear.
