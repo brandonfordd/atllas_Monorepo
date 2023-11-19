@@ -22,53 +22,95 @@ type Home = NativeStackScreenProps<StackScreens, 'Home'>;
 
 // Define the Home component, which represents the main screen of the app
 export default function Home({ route, navigation }: HomeProps) {
-  const userData = route.params?.userData;
-  const loginData = route.params?.loginData;
+    // Functions to handle the button presses
+    const handleLoginPress = useCallback(() => navigation.navigate("Login"), [navigation?.navigate]);
+    const handleRegisterPress = useCallback(() => navigation.navigate('Register'), [navigation?.navigate]);
+    const handleWebviewPress = useCallback(() => navigation.navigate('App'), [navigation?.navigate]);
+    const [gameResult, setGameResult] = useState<string | null>(null);
+   
+    const [userData, setUserData] = useState(route.params?.userData);
+    const [token, setToken] = useState<string | null>(null);
+  
+    useEffect(() => {
+      setUserData(route.params?.userData);
+    }, [route.params?.userData]);
 
-  //Log data to console for debugging
-  console.log('User data from home:', userData)
-  console.log('Login Token from home:', loginData)
-
-  // Functions to handle the button presses
-  const handleLoginPress = useCallback(() => navigation.navigate("Login"), [navigation?.navigate]);
-  const handleRegisterPress = useCallback(() => navigation.navigate('Register'), [navigation?.navigate]);
-  const handleWebviewPress = useCallback(() => navigation.navigate('App'), [navigation?.navigate]);
- 
-  // State to store the user token
-  const [_, setToken] = useState<string | null>(null);
-
-  // State for the Rock, Paper, Scissors game
-  const [gameResult, setGameResult] = useState<string | null>(null);
-
-  //useEffect Function to retrieve the users token that was store in auth login page
-  useEffect(() => {
-    const getToken = async () => {
+    // Function to retrieve the user token from AsyncStorage
+    const retrieveUserToken = async (): Promise<string | null> => {
       try {
-        const storedToken = await AsyncStorage.getItem('userToken');
-        if (storedToken) {
-          setToken(storedToken);
-        }
+        const userToken = await AsyncStorage.getItem('userToken');
+        return userToken;
       } catch (error) {
-        console.error('Get Token Error:', error);
+        console.error('Retrieve User Token Error:', error);
+        return null;
       }
     };
-
-    // Fetch the token on component mount
-    getToken();
-  }, []); // Run only once on component mount
+  
+    // Function to fetch user data using the provided token
+    const fetchUserData = async (token: string | null): Promise<void> => {
+      try {
+        if (!token) {
+          console.error('Invalid token');
+          return;
+        }
+  
+        // Set the .env. variable to use in local or development,
+        // note, change to your own URL in .env.development
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  
+        // Make Auth request
+        const response = await fetch(`${apiUrl}auth`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data.data);
+          console.log('Set user data:', data.data);
+        } else {
+          Alert.alert('Error', 'Failed to fetch user data');
+        }
+      } catch (error) {
+        console.error('Fetch User Data Error:', error);
+        Alert.alert('Error', 'An error occurred while fetching user data');
+      }
+    };
+  
+    // useEffect to fetch user token and user data on component mount
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          // Retrieve the user token
+          const userToken = await retrieveUserToken();
+          setToken(userToken);
+  
+          // Fetch user data using the retrieved token
+          await fetchUserData(userToken);
+        } catch (error) {
+          console.error('Fetch Data Error:', error);
+        }
+      };
+  
+      // Fetch data on component mount
+      fetchData();
+    }, []);
 
   // Function to handle the logout button press
   const handleLogout = async () => {
     try {
-
-      // Clear the stored token in AsyncStorage
+      // Clear the stored token and user data in AsyncStorage
       await AsyncStorage.removeItem('userToken');
-
-
+      await AsyncStorage.removeItem('userData');
+  
       //Set the .env. variable to use in local or development,
       //note, change to your own URL in .env.development
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
+  
       // Make a request to the backend logout endpoint
       const logoutResponse = await fetch(`${apiUrl}auth/logout`, {
         method: 'POST',
@@ -83,16 +125,14 @@ export default function Home({ route, navigation }: HomeProps) {
         setToken(null);
   
         // Reset the user data state and login data
-        navigation.setParams({ loginData: undefined });
         navigation.setParams({ userData: undefined });
-
+  
         // Reset the game result state to null
         setGameResult(null);
-
+  
         // Navigate to the login screen
         navigation.navigate('Login');
       } else {
-
         // Handle unsuccessful logout
         Alert.alert('Error', 'Logout failed');
       }
@@ -155,14 +195,26 @@ export default function Home({ route, navigation }: HomeProps) {
             </TouchableHighlight>
             <Text style={styles.gameResult}>{gameResult}</Text>
           </View>
-        
-        
-          <TouchableHighlight
-            style={styles.buttonWebViewLN}
-            onPress={handleWebviewPress}
-          >
-            <Text style={styles.buttonText}>Move to Webview!</Text>
-          </TouchableHighlight>
+
+          <View style={styles.buttonContainer}>
+  <TouchableHighlight
+    style={styles.buttonProfile}
+    onPress={() =>
+      navigation.navigate('Profile', {
+        userData: route.params?.userData,
+      })
+    }
+  >
+    <Text style={styles.buttonText}>Profile</Text>
+  </TouchableHighlight>
+
+  <TouchableHighlight
+    style={styles.buttonWebViewLN}
+    onPress={handleWebviewPress}
+  >
+    <Text style={styles.buttonText}>Webview</Text>
+  </TouchableHighlight>
+</View>
 
           <TouchableHighlight
             style={styles.buttonLogoutLN}
@@ -211,10 +263,10 @@ const buttonStyles = {
 };
 
 const buttonText: TextStyle = {
-  color: 'black',
+  color: 'white',
   textAlign: 'center',
   lineHeight: 80,
-  fontSize: 18, 
+  fontSize: 20, 
   fontWeight: 'bold', 
 };
 
@@ -246,11 +298,27 @@ const styles = StyleSheet.create({
     ...buttonStyles,
     backgroundColor: '#1e4264',
   },
+  buttonContainer: {
+    flexDirection: 'row', // Align items horizontally
+    justifyContent: 'space-between', // Add space between the buttons
+    marginBottom: 20, // Adjust the spacing as needed
+    marginTop: 'auto',
+  },
   buttonWebViewLN: {
     ...buttonStyles,
     backgroundColor: '#c5c13e',
-    marginTop: 'auto',
+    marginTop: 10,
+    width: 125,
     marginBottom:0,
+    paddingHorizontal:15,
+  },
+  buttonProfile: {
+    ...buttonStyles,
+    backgroundColor: '#c5c13e',
+    marginTop: 'auto',
+    width: 125,
+    marginBottom:0,
+    paddingHorizontal:15,
   },
   buttonLogoutLN: {
     ...buttonStyles,

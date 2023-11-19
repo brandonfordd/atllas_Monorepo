@@ -6,6 +6,7 @@ import Home from './screens/home/Home';
 import WebView from './screens/webview/WebView';
 import Login from './screens/auth/Login';
 import Register from './screens/auth/Register';
+import Profile from './screens/auth/Profile';
 
 
 // Defining the type for the stack screen props
@@ -13,12 +14,11 @@ export type StackScreens = {
   Home: {
      // 'loginData' is an optional property of any type to match data coming from login
     userData: any;
-     // 'loginData' is an optional property of any type to match data coming from login
-    loginData?: any;
   };
   Login: undefined
   Register:  undefined;
   App: undefined;
+  Profile: undefined;
 }
 
 export const Stack = createNativeStackNavigator<StackScreens>();
@@ -31,6 +31,7 @@ export default function App() {
         <Stack.Navigator>
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Profile" component={Profile} />
           <Stack.Screen name="Register" component={Register} />
           <Stack.Screen name="App" component={WebView} />
         </Stack.Navigator>

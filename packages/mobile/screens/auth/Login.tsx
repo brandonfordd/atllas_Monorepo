@@ -25,6 +25,7 @@ export default function Login({ navigation }: LoginProps) {
 
   //Handle navigation back to register if misclick
   const handleRegisterPress = useCallback(() => navigation.navigate('Register'), [navigation?.navigate]);
+
   // Function to fetch user data using the stored token
   const fetchUserData = async (token: string): Promise<void> => {
     try {
@@ -87,7 +88,11 @@ export default function Login({ navigation }: LoginProps) {
         // Save the token to AsyncStorage
         await AsyncStorage.setItem('userToken', responseData.data.token);
 
-        console.log('User data from login:', responseData)
+        // Save the token to AsyncStorage
+        const userData = { responseData };
+        await AsyncStorage.setItem('userData', JSON.stringify(userData))
+
+        console.log('User data from login:', userData)
         
         // Fetch user data using the token
         fetchUserData(responseData.data.token);
@@ -96,7 +101,6 @@ export default function Login({ navigation }: LoginProps) {
         setUserData(responseData.data);
         navigation.navigate('Home', {
           userData: responseData,
-          loginData: responseData.data,
         });
 
       } else {

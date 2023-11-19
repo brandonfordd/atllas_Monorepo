@@ -117,6 +117,7 @@ const AuthRouter: IRoute = {
           id: user.dataValues.id,
           username: user.dataValues.username,
           displayName: user.dataValues.displayName,
+          registered:user.dataValues.registered
         },
       });
     });
@@ -152,7 +153,7 @@ const AuthRouter: IRoute = {
     
         // Hash the password using bcrypt
         const hashedPassword = await bcrypt.hash(password, 10);
-    
+
         // Create a new user in the database
         const newUser = await User.create({
           username,
@@ -221,6 +222,51 @@ const AuthRouter: IRoute = {
         });
       } catch (error) {
         console.error('Error during logout:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Internal Server Error',
+        });
+      }
+    });
+
+    router.post('/update-display-name', async (req, res) => {
+      try {
+        const { displayName, userId } = req.body;
+
+        console.log('Received data:', req.body);
+        console.log('UserId:', userId);
+        
+        if (!userId || !displayName) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid request. Missing user ID or display name.',
+          });
+        }
+
+        const updatedUser = await User.update(
+          { displayName },
+          { where: { id: userId } }
+        );
+
+        if (updatedUser[0] === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Failed to update display name. User not found.',
+          });
+        }
+
+        return res.json({
+          success: true,
+          message: 'Display name updated successfully.',
+          data: {
+            user: {
+              id: userId,
+              displayName,
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Error updating display name:', error);
         return res.status(500).json({
           success: false,
           message: 'Internal Server Error',
