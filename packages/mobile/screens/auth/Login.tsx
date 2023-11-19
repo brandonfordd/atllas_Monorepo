@@ -21,48 +21,15 @@ export default function Login({ navigation }: LoginProps) {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [_, setUserData] = useState(null);
 
   //Handle navigation back to register if misclick
   const handleRegisterPress = useCallback(() => navigation.navigate('Register'), [navigation?.navigate]);
-
-  // Function to fetch user data using the stored token
-  const fetchUserData = async (token: string): Promise<void> => {
-    try {
-
-      //Set the .env. variable to use in local or development,
-      //note, change to your own URL in .env.development
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
-      //Make Auth request
-      const response = await fetch(`${apiUrl}auth`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserData(data.data);
-        console.log('Set user data :', data.data)
-      } else {
-        Alert.alert('Error', 'Failed to fetch user data');
-      }
-    } catch (error) {
-      console.error('Fetch User Data Error:', error);
-      Alert.alert('Error', 'An error occurred while fetching user data');
-    }
-  };
-
+  
   // Function to handle login
   const handleLogin = async (username: string, password: string): Promise<void> => {
     try {
       
       //Set the .env. variable to use in local or development,
-      //note, change to your own URL in .env.development
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
       // Make the login request
@@ -97,11 +64,7 @@ export default function Login({ navigation }: LoginProps) {
 
         console.log('User data from login:', userData)
         
-        // Fetch user data using the token
-        fetchUserData(responseData.data.token);
-
-        // Set user data and navigate to the home screen, passing user data
-        setUserData(responseData.data);
+        //Navigate to home screen once logged in for better flow
         navigation.navigate('Home');
 
       } else {

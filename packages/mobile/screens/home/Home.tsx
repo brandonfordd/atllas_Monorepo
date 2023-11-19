@@ -26,6 +26,7 @@ export default function Home({ navigation }: Home) {
       useCallback(() => {
         const fetchData = async () => {
           try {
+             // Retrieve the user token from AsyncStorage
               const userToken = await retrieveUserToken();
               setToken(userToken);
 
@@ -54,7 +55,7 @@ export default function Home({ navigation }: Home) {
     const fetchUserData = async (token: string | null): Promise<void> => {
       try {
           if (!token) {
-              console.error('Invalid token');
+              console.log('No token');
               return;
           }
 
@@ -70,6 +71,7 @@ export default function Home({ navigation }: Home) {
           });
 
           if (response.ok) {
+              // Parse and set the fetched user data
               const data = await response.json();
               setUserData(data.data);
               console.log('Set user data:', data.data);
@@ -91,7 +93,6 @@ export default function Home({ navigation }: Home) {
       await AsyncStorage.removeItem('userData');
   
       //Set the .env. variable to use in local or development,
-      //note, change to your own URL in .env.development
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   
       // Make a request to the backend logout endpoint
@@ -104,9 +105,9 @@ export default function Home({ navigation }: Home) {
       });
   
       if (logoutResponse.ok) {
-        // Reset the token state
+        // Reset the token state and user data
         setToken(null);
-  
+        setUserData(null)
         // Clear the stored token and user data in AsyncStorage
         await AsyncStorage.removeItem('userToken');
         await AsyncStorage.removeItem('userData');

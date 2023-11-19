@@ -9,6 +9,7 @@ type Profile = NativeStackScreenProps<StackScreens, 'Profile'>;
 export default function UserProfile({}: Profile) {
     const [userData, setUserData] = useState<any>(null);
     const [token, setToken] = useState<string | null>(null);
+    //added isLoading state so display variable don't get set as undefined
     const [isLoading, setIsLoading] = useState(true);
 
     const { displayName: currentDisplayName, username, registered } = userData?.user || {};
@@ -34,6 +35,7 @@ export default function UserProfile({}: Profile) {
                 }),
             });
 
+            // Log the request for debugging
             console.log('Request update displayname:', {
                 apiUrl,
                 method: 'POST',
@@ -46,8 +48,7 @@ export default function UserProfile({}: Profile) {
                 }),
             });
             
-            //This console log throws PrettyFormatPluginError because its too big,
-            // seems to be a babel issue from what I researched
+             // Log the response for debugging (commented due to PrettyFormatPluginError)
             // console.log('Response:', response);
             if (response.ok) {
                 // Update the local state with the new display name
@@ -80,6 +81,7 @@ export default function UserProfile({}: Profile) {
         }
     };
 
+    // Function to retrieve the user token from AsyncStorage
     const retrieveUserToken = async (): Promise<string | null> => {
         try {
             const userToken = await AsyncStorage.getItem('userToken');
@@ -91,6 +93,7 @@ export default function UserProfile({}: Profile) {
         }
     };
 
+    // Function to fetch user data using the provided token
     const fetchUserData = async (token: string | null): Promise<void> => {
         try {
             if (!token) {
@@ -120,11 +123,12 @@ export default function UserProfile({}: Profile) {
             console.error('Fetch User Data Error:', error);
             Alert.alert('Error', 'An error occurred while fetching user data');
         } finally {
-            // Set loading state to false after fetching data, whether successful or not
+            // Set loading state to false after fetching data
             setIsLoading(false);
         }
     };
 
+    // useEffect to fetch initial data on component mount
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -150,18 +154,17 @@ export default function UserProfile({}: Profile) {
         setDisplayName(currentDisplayName);
     }, [userData]);
 
+    // Function to open the edit modal
     const handleOpenEditModal = () => {
         setIsEditing(true);
     };
 
+    // Function to close the edit modal
     const handleCloseEditModal = () => {
         setIsEditing(false);
         setNewDisplayName('');
     };
 
-    
-
-    // Don't render until userData is available
         return (
             <View>
             {isLoading ? (
@@ -203,6 +206,7 @@ export default function UserProfile({}: Profile) {
         );
       }
 
+      // Styles for the component
       const styles = StyleSheet.create({
         container: {
           flex: 1,
