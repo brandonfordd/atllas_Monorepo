@@ -66,7 +66,7 @@ Session.init({
     autoIncrement: true,
   },
   user: {
-    type: DataTypes.NUMBER,
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   token: {
@@ -83,5 +83,13 @@ Session.init({
     },
   ],
 });
+sequelize.sync()
 
-User.hasMany(Session);
+
+User.sync()
+  .then(() => {
+    console.log('User model synced successfully');
+  })
+  .catch((error) => {
+    console.error('Error syncing User model:', error);
+  });

@@ -1,9 +1,10 @@
 import IRoute from '../types/IRoute';
 import {Router} from 'express';
 import {compareSync} from 'bcrypt';
-import {attachSession} from '../middleware/auth';
+import { attachSession } from '../middleware/auth';
 import {sequelize, Session, User} from '../services/db';
 import {randomBytes} from 'crypto';
+import bcrypt from 'bcrypt';
 
 const AuthRouter: IRoute = {
   route: '/auth',
@@ -96,6 +97,9 @@ const AuthRouter: IRoute = {
         httpOnly: true,
       });
 
+      // Log information before sending the response
+      console.log('Cookie Set:', sessionToken);
+
       // We return the cookie to the consumer so that non-browser
       // contexts can utilize it easily. This is a convenience for the
       // take-home so you don't have to try and extract the cookie from
@@ -107,17 +111,121 @@ const AuthRouter: IRoute = {
         data: {
           token: sessionToken,
         },
+
+        // Send user data as well as token to consumer
+        user: {
+          id: user.dataValues.id,
+          username: user.dataValues.username,
+          displayName: user.dataValues.displayName,
+        },
       });
     });
-
-    // Attempt to register
-    router.post('/register', (req, res) => {
-      // TODO
+    
+    // Create a new user using the username and password from form
+    router.post('/register', async (req, res) => {
+      try {
+        const { username, password } = req.body;
+    
+        //Check if form had a password and username
+        if (!username || !password) {
+          return res.status(400).json({
+            success: false,
+            message: 'Missing username/password.',
+          });
+        }
+    
+        // Check if the username is already taken
+        const existingUser = await User.findOne({
+          where: sequelize.where(
+            sequelize.fn('lower', sequelize.col('username')),
+            sequelize.fn('lower', username),
+          ),
+        });
+    
+        //Check for existing user so usernames are duplicated
+        if (existingUser) {
+          return res.status(400).json({
+            success: false,
+            message: 'Username is already taken.',
+          });
+        }
+    
+        // Hash the password using bcrypt
+        const hashedPassword = await bcrypt.hash(password, 10);
+    
+        // Create a new user in the database
+        const newUser = await User.create({
+          username,
+          password: hashedPassword,
+          displayName: username, 
+          // Set the registered field to the current date and time
+          registered: new Date(), 
+        });
+    
+        //Return user data once registered 
+        return res.json({
+          success: true,
+          message: 'User registered successfully.',
+          data: {
+            user: {
+              id: newUser.dataValues.id,
+              username: newUser.dataValues.username,
+              displayName: newUser.dataValues.displayName,
+              registered: newUser.dataValues.registered,
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Error during registration:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Internal Server Error',
+        });
+      }
     });
 
-    // Log out
-    router.post('/logout', (req, res) => {
-      // TODO
+    router.post('/logout', attachSession, async (req, res) => {
+      try {
+
+        // Assuming req.session.token.id contains the session ID
+        console.log('Session Id:', req.session?.token?.id);
+        const sessionId = req.session?.token?.id;
+
+        //Check for a valid session ID, if none come back false
+        if (!sessionId) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid session ID.',
+          });
+        }
+    
+        // Destroy the session on the server
+        await Session.destroy({
+          where: {
+            id: sessionId,
+          },
+        });
+    
+        // Clear cookies on the client
+        res.cookie('SESSION_TOKEN', '', {
+          expires: new Date(0),  // Set the expiration date in the past
+          secure: false,
+          httpOnly: true,
+          path: '/',
+        });
+    
+        // Return a success response
+        return res.json({
+          success: true,
+          message: 'Logged out successfully.',
+        });
+      } catch (error) {
+        console.error('Error during logout:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Internal Server Error',
+        });
+      }
     });
 
     return router;

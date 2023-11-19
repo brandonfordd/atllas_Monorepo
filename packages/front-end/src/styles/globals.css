@@ -1,3 +1,49 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    text-align: center; /* Center text horizontally */
+}
+
+/* Style for the Rock, Paper, Scissors Game section */
+#game-section {
+    margin-top: 1rem;
+    text-align: center;
+  }
+  
+  /* Style for the buttons */
+  #game-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  #game-buttons button {
+    margin-bottom: 0.5rem;
+    width: 150px; /* Set a fixed width for the buttons */
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    background-color: #9acd32; /* Match the color used in the native app */
+    color: #000;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  #game-buttons button:hover {
+    background-color: #7cbf2a; /* Change color on hover */
+  }
+  
+  /* Style for the game result text */
+  #game-result {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #FF0000; /* Match the color used in the native app */
+  }

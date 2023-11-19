@@ -18,6 +18,7 @@ export function attachSession(req: Request, res: Response, next: NextFunction) {
     .then(sess => {
       if (sess?.dataValues?.id) {
         req.session.token = sess.dataValues;
+        console.log('Retrieved session from database:', sess);
 
         User.findOne({
           where: {
@@ -29,6 +30,8 @@ export function attachSession(req: Request, res: Response, next: NextFunction) {
               req.session.user = user.dataValues;
             } // else: session is mapped to a deleted user. should report this somewhere.
 
+            // Log after attaching the session to see if correct session was attached
+            console.log('Session attached:', req.session);
             next();
           });
       } else {

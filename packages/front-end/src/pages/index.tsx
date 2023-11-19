@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import Head from 'next/head';
 import {Inter} from '@next/font/google';
 import {GetServerSidePropsContext} from 'next';
+import React, { useState } from 'react';
 
 const inter = Inter({subsets: ['latin']});
 
@@ -57,19 +58,60 @@ export type HomeProps = {
 export default function Home({
   sess,
 }: HomeProps) {
+
+  const [gameResult, setGameResult] = useState<string | null>(null);
+
+  const playGame = (playerChoice) => {
+    const choices = ['rock', 'paper', 'scissors'];
+    const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+
+    let result;
+
+    if (playerChoice === computerChoice) {
+      result = "It's a tie!";
+    } else if (
+      (playerChoice === 'rock' && computerChoice === 'scissors') ||
+      (playerChoice === 'paper' && computerChoice === 'rock') ||
+      (playerChoice === 'scissors' && computerChoice === 'paper')
+    ) {
+      result = "You win!";
+    } else {
+      result = "You lose!";
+    }
+
+    setGameResult(`You chose ${playerChoice}, computer chose ${computerChoice}. ${result}`);
+  };
+
   return (
     <>
       <Head>
-        <title>Atllas Takehome</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/public/favicon.ico" />
+      <title>Atllas Takehome</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <link rel="icon" href="/public/favicon.ico" />
       </Head>
       <main className={clsx('w-full h-full', inter.className)}>
         <h1 className="border-b border-neutral-300 px-4 py-2 text-2xl font-medium text-center">
-          User Profile
+          {`${sess?.displayName || sess?.username ? ` Welcome, ${sess?.displayName || sess?.username}!` : 'Hello Stranger'}`}
         </h1>
         <div className="p-4">
-          <p className="text-neutral-500">{`How ya goin, ${sess?.displayName || sess?.username || 'stranger'}?`}</p>
+          <p className="text-neutral-500">
+            {sess
+            ? ` Are You Ready To Play?`
+            : 'Sign in if you want to play a game!'
+            }
+          </p>
+
+          {/* Conditionally render Rock, Paper, Scissors Game if there is a session */}
+          {sess && (
+          <div id="game-section">
+            <div id="game-buttons">
+              <button onClick={() => playGame('rock')}>Rock</button>
+              <button onClick={() => playGame('paper')}>Paper</button>
+              <button onClick={() => playGame('scissors')}>Scissors</button>
+            </div>
+            <p id="game-result">{gameResult}</p>
+          </div>
+          )}
         </div>
       </main>
     </>

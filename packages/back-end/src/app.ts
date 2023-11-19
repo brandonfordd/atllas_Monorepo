@@ -17,6 +17,20 @@ app.use(cookieParser());
 app.use(Cors);
 app.use(attachSequelize);
 
+// Custom middleware to log parsed cookies
+app.use((req, res, next) => {
+  cookieParser()(req, res, () => {
+    console.log('Parsed Cookies:', req.cookies);
+    next();
+  });
+});
+
+// Custom middleware to Log incoming request to see if headers cookies were set properly
+app.use((req, res, next) => {
+  console.log('Incoming Request:', req.headers);
+  next();
+});
+
 // Read all entries from the "routes" directory. Filter out any entry that is not a file.
 const _ROUTES_ROOT = resolve(join(__dirname, './routes/'));
 const queue = readdirSync(_ROUTES_ROOT)
