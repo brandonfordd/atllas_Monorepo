@@ -7,15 +7,23 @@ import WebView from './screens/webview/WebView';
 import Login from './screens/auth/Login';
 import Register from './screens/auth/Register';
 
+
+// Defining the type for the stack screen props
 export type StackScreens = {
-  Home: undefined,
-  Login: undefined,
-  Register: undefined,
-  App: undefined,
+  Home: {
+     // 'loginData' is an optional property of any type to match data coming from login
+    userData: any;
+     // 'loginData' is an optional property of any type to match data coming from login
+    loginData?: any;
+  };
+  Login: undefined
+  Register:  undefined;
+  App: undefined;
 }
 
 export const Stack = createNativeStackNavigator<StackScreens>();
 
+// Main App component
 export default function App() {
   return (
     <SafeAreaProvider>
