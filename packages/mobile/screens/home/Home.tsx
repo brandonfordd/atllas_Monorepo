@@ -116,7 +116,7 @@ export default function Home({ navigation }: Home) {
         setGameResult(null);
   
         // Navigate to the login screen
-        navigation.navigate('Login');
+        // navigation.navigate('Home');
       } else {
         // Handle unsuccessful logout
         Alert.alert('Error', 'Logout failed');
